@@ -103,8 +103,6 @@
 sequenceDiagram
     User->>Frontend: Fill registration form
     Frontend->>Cognito: Create user account
-    Cognito->>User: Send confirmation email
-    User->>Cognito: Confirm account
     Cognito->>Frontend: Return success
     Frontend->>User: Redirect to login
 ```
