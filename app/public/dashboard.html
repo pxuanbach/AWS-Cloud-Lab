@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Blog - Group3 Blog</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/" style="color: white !important;">
+                <i class="bi bi-journal-text me-2"></i>Group3 Blog
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="bi bi-house me-1"></i>Trang chủ
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/dashboard">
+                            <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle me-1"></i><span id="userDisplayName">User</span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="logout()">
+                                <i class="bi bi-box-arrow-right me-2"></i>Đăng xuất
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h1 class="mb-0">
+                        <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                    </h1>
+                    <p class="mb-0 mt-2 opacity-75">Quản lý blog và nội dung của bạn</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#createBlogModal">
+                        <i class="bi bi-plus-circle me-2"></i>Tạo bài viết mới
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Container -->
+    <div class="container mt-3">
+        <div id="alertContainer"></div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container my-4">
+        <!-- Stats Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-primary" id="totalMyBlogs">0</h3>
+                        <p class="card-text">Tổng bài viết</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-success" id="totalViews">-</h3>
+                        <p class="card-text">Lượt xem</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-info" id="totalImages">0</h3>
+                        <p class="card-text">Hình ảnh</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h3 class="text-warning">Online</h3>
+                        <p class="card-text">Trạng thái</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Blogs Section -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-journal-text me-2"></i>Bài viết của tôi
+                </h5>
+                <button class="btn btn-outline-primary btn-sm" onclick="loadMyBlogs()">
+                    <i class="bi bi-arrow-clockwise"></i> Làm mới
+                </button>
+            </div>
+            <div class="card-body">
+                <!-- Loading indicator -->
+                <div id="loadingContainer" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Đang tải...</span>
+                    </div>
+                    <p class="mt-2">Đang tải bài viết...</p>
+                </div>
+
+                <!-- Blogs table -->
+                <div id="blogsTableContainer" class="d-none">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Tiêu đề</th>
+                                    <th>Hình ảnh</th>
+                                    <th>Ngày tạo</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="blogsTableBody">
+                                <!-- Blog rows will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- No blogs message -->
+                <div id="noBlogsMessage" class="text-center py-4 d-none">
+                    <i class="bi bi-journal-plus display-1 text-muted"></i>
+                    <h4 class="text-muted mt-3">Chưa có bài viết nào</h4>
+                    <p class="text-muted">Hãy tạo bài viết đầu tiên của bạn!</p>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createBlogModal">
+                        <i class="bi bi-plus-circle me-2"></i>Tạo bài viết mới
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Blog Modal -->
+    <div class="modal fade" id="createBlogModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle me-2"></i>Tạo bài viết mới
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createBlogForm">
+                        <div class="mb-3">
+                            <label for="blogTitle" class="form-label">
+                                <i class="bi bi-card-heading me-1"></i>Tiêu đề bài viết
+                            </label>
+                            <input type="text" class="form-control" id="blogTitle" name="title" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="blogContent" class="form-label">
+                                <i class="bi bi-file-text me-1"></i>Nội dung
+                            </label>
+                            <textarea class="form-control" id="blogContent" name="content" rows="8" required></textarea>
+                            <div class="form-text">
+                                <span id="contentLength">0</span>/5000 ký tự
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="blogImage" class="form-label">
+                                <i class="bi bi-image me-1"></i>Hình ảnh (tùy chọn)
+                            </label>
+                            <input type="file" class="form-control" id="blogImage" name="image" accept="image/*">
+                            <div class="form-text">
+                                Chấp nhận file JPG, PNG, GIF. Tối đa 5MB.
+                            </div>
+                        </div>
+
+                        <!-- Image preview -->
+                        <div id="imagePreview" class="mb-3 d-none">
+                            <label class="form-label">Xem trước hình ảnh:</label>
+                            <div class="border rounded p-2">
+                                <img id="previewImg" src="" alt="Preview" class="img-fluid" style="max-height: 200px;">
+                                <button type="button" class="btn btn-sm btn-outline-danger mt-2" onclick="removeImagePreview()">
+                                    <i class="bi bi-trash"></i> Xóa ảnh
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" id="createBlogBtn" onclick="createBlog()">
+                        <i class="bi bi-plus-circle me-2"></i>Tạo bài viết
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Blog Modal -->
+    <div class="modal fade" id="viewBlogModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewBlogTitle">Chi tiết bài viết</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="viewBlogBody">
+                    <!-- Blog content will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/utils.js"></script>
+    <script>
+        let currentUser = null;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication
+            if (!api.isAuthenticated()) {
+                Utils.redirectTo('/login', 0);
+                return;
+            }
+
+            // Load user info and blogs
+            loadUserInfo();
+            loadMyBlogs();
+
+            // Setup event listeners
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Content length counter
+            document.getElementById('blogContent').addEventListener('input', function() {
+                const length = this.value.length;
+                document.getElementById('contentLength').textContent = length;
+                
+                if (length > 5000) {
+                    this.classList.add('is-invalid');
+                } else {
+                    this.classList.remove('is-invalid');
+                }
+            });
+
+            // Image preview
+            document.getElementById('blogImage').addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    if (file.size > 5 * 1024 * 1024) { // 5MB
+                        Utils.showAlert('File quá lớn. Vui lòng chọn file nhỏ hơn 5MB.', 'danger');
+                        this.value = '';
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('previewImg').src = e.target.result;
+                        document.getElementById('imagePreview').classList.remove('d-none');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        function loadUserInfo() {
+            // Get user info from token (proper JWT decoding)
+            try {
+                const token = localStorage.getItem('authToken');
+                if (token) {
+                    // Decode JWT token to get user info
+                    const tokenParts = token.split('.');
+                    if (tokenParts.length === 3) {
+                        const payload = JSON.parse(atob(tokenParts[1]));
+                        
+                        // Get display name from token payload
+                        let displayName = payload.name || payload.email || payload.username || 'User';
+                        
+                        // If name looks like UUID, use email prefix instead
+                        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+                        if (uuidRegex.test(displayName)) {
+                            const email = payload.email || payload.username;
+                            if (email && email.includes('@')) {
+                                displayName = email.split('@')[0];
+                            } else {
+                                displayName = 'User';
+                            }
+                        }
+                        
+                        currentUser = {
+                            id: payload.sub || payload.username,
+                            email: payload.email || payload.username,
+                            name: displayName
+                        };
+                        
+                        document.getElementById('userDisplayName').textContent = displayName;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+                document.getElementById('userDisplayName').textContent = 'User';
+            }
+        }
+
+        async function loadMyBlogs() {
+            const loadingContainer = document.getElementById('loadingContainer');
+            const blogsTableContainer = document.getElementById('blogsTableContainer');
+            const noBlogsMessage = document.getElementById('noBlogsMessage');
+
+            try {
+                // Show loading
+                loadingContainer.classList.remove('d-none');
+                blogsTableContainer.classList.add('d-none');
+                noBlogsMessage.classList.add('d-none');
+
+                const blogs = await api.getMyBlogs();
+
+                if (blogs.length === 0) {
+                    loadingContainer.classList.add('d-none');
+                    noBlogsMessage.classList.remove('d-none');
+                    updateStats(0, 0);
+                    return;
+                }
+
+                // Update stats
+                const imagesCount = blogs.filter(blog => blog.image_file_name).length;
+                updateStats(blogs.length, imagesCount);
+
+                // Render blogs table with async image loading
+                const tableBody = document.getElementById('blogsTableBody');
+                
+                // Generate table rows
+                const blogRows = await Promise.all(blogs.map(async blog => {
+                    let imageHtml = `<i class="bi bi-image text-muted"></i>`;
+                    
+                    // Get presigned URL for image if exists
+                    if (blog.image_file_name) {
+                        try {
+                            const imageUrl = await api.getImageUrl(blog.image_file_name);
+                            if (imageUrl) {
+                                imageHtml = `<img src="${imageUrl}" alt="Blog image" class="img-thumbnail" style="width: 60px; height: 60px; object-fit: cover;">`;
+                            }
+                        } catch (error) {
+                            console.error('Error loading image:', error);
+                        }
+                    }
+                    
+                    return `
+                        <tr>
+                            <td>
+                                <strong>${blog.title}</strong>
+                                <br>
+                                <small class="text-muted">${Utils.truncateText(blog.content, 100)}</small>
+                            </td>
+                            <td>${imageHtml}</td>
+                            <td>
+                                <small>${Utils.formatDate(blog.created_at)}</small>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary me-1" onclick="viewBlog(${blog.id}, \`${blog.title.replace(/`/g, '\\`')}\`, \`${blog.content.replace(/`/g, '\\`').replace(/\n/g, '\\n')}\`, '${blog.image_file_name || ''}', '${blog.created_at}')">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteBlog(${blog.id}, '${blog.title}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }));
+
+                tableBody.innerHTML = blogRows.join('');
+                loadingContainer.classList.add('d-none');
+                blogsTableContainer.classList.remove('d-none');
+
+            } catch (error) {
+                console.error('Error loading blogs:', error);
+                loadingContainer.classList.add('d-none');
+                Utils.showAlert('Không thể tải bài viết. Vui lòng thử lại.', 'danger');
+            }
+        }
+
+        function updateStats(totalBlogs, totalImages) {
+            document.getElementById('totalMyBlogs').textContent = totalBlogs;
+            document.getElementById('totalImages').textContent = totalImages;
+        }
+
+        async function createBlog() {
+            const form = document.getElementById('createBlogForm');
+            const createBtn = document.getElementById('createBlogBtn');
+            const originalBtnText = createBtn.innerHTML;
+
+            // Get form data
+            const title = document.getElementById('blogTitle').value.trim();
+            const content = document.getElementById('blogContent').value.trim();
+            const imageFile = document.getElementById('blogImage').files[0];
+
+            // Validate
+            if (!title || !content) {
+                Utils.showAlert('Vui lòng nhập đầy đủ tiêu đề và nội dung.', 'danger');
+                return;
+            }
+
+            if (content.length > 5000) {
+                Utils.showAlert('Nội dung không được vượt quá 5000 ký tự.', 'danger');
+                return;
+            }
+
+            try {
+                // Show loading
+                Utils.showLoading(createBtn, 'Đang tạo bài viết...');
+
+                // Prepare form data
+                const formData = new FormData();
+                formData.append('title', title);
+                formData.append('content', content);
+                if (imageFile) {
+                    formData.append('image', imageFile);
+                }
+
+                // Create blog
+                const result = await api.createBlog(formData);
+
+                Utils.showAlert('Tạo bài viết thành công!', 'success');
+                
+                // Close modal and reset form
+                const modal = bootstrap.Modal.getInstance(document.getElementById('createBlogModal'));
+                modal.hide();
+                form.reset();
+                removeImagePreview();
+
+                // Reload blogs
+                loadMyBlogs();
+
+            } catch (error) {
+                console.error('Error creating blog:', error);
+                Utils.showAlert(error.message || 'Không thể tạo bài viết. Vui lòng thử lại.', 'danger');
+            } finally {
+                Utils.hideLoading(createBtn, originalBtnText);
+            }
+        }
+
+        async function deleteBlog(blogId, title) {
+            if (!confirm(`Bạn có chắc chắn muốn xóa bài viết "${title}"?`)) {
+                return;
+            }
+
+            try {
+                await api.deleteBlog(blogId);
+                Utils.showAlert('Xóa bài viết thành công!', 'success');
+                loadMyBlogs();
+            } catch (error) {
+                console.error('Error deleting blog:', error);
+                Utils.showAlert(error.message || 'Không thể xóa bài viết. Vui lòng thử lại.', 'danger');
+            }
+        }
+
+        async function viewBlog(id, title, content, imageFileName, createdAt) {
+            document.getElementById('viewBlogTitle').textContent = title;
+            
+            const modalBody = document.getElementById('viewBlogBody');
+            
+            // Process content to handle line breaks and HTML
+            const processedContent = content
+                .replace(/\n/g, '<br>') // Convert \n to <br> tags
+                .replace(/\\n/g, '<br>'); // Convert escaped \n to <br> tags
+            
+            // Show content first - using innerHTML to support HTML formatting and line breaks
+            modalBody.innerHTML = `
+                <div id="blogImageContainer"></div>
+                <div class="lead" style="white-space: pre-wrap; word-wrap: break-word; line-height: 1.6;">${processedContent}</div>
+                <hr>
+                <small class="text-muted">
+                    <i class="bi bi-calendar me-1"></i>Tạo lúc: ${Utils.formatDate(createdAt)}
+                </small>
+            `;
+            
+            // Load image if exists
+            if (imageFileName) {
+                try {
+                    const imageUrl = await api.getImageUrl(imageFileName);
+                    if (imageUrl) {
+                        document.getElementById('blogImageContainer').innerHTML = 
+                            `<img src="${imageUrl}" class="img-fluid mb-3 rounded" alt="${title}">`;
+                    }
+                } catch (error) {
+                    console.error('Error loading image for view:', error);
+                }
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('viewBlogModal'));
+            modal.show();
+        }
+
+        function removeImagePreview() {
+            document.getElementById('blogImage').value = '';
+            document.getElementById('imagePreview').classList.add('d-none');
+            document.getElementById('previewImg').src = '';
+        }
+
+        function logout() {
+            api.clearToken();
+            Utils.showAlert('Đã đăng xuất thành công!', 'success');
+            Utils.redirectTo('/', 1000);
+        }
+    </script>
+</body>
+</html>
