@@ -1,8 +1,9 @@
 const express = require('express');
+const dotenv = require('dotenv');
 const { initDatabase } = require('./config/database');
 const apiRouter = require('./routes/api');
-dotenv = require('dotenv');
 
+// Load environment variables first
 dotenv.config();
 
 const app = express();

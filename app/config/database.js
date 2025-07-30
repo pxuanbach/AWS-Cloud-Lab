@@ -1,5 +1,13 @@
 const mysql = require('mysql2/promise');
 
+// Debug environment variables loading
+console.log('Environment Variables Check:');
+console.log('- NODE_ENV:', process.env.NODE_ENV);
+console.log('- DB_HOST:', process.env.DB_HOST || 'NOT SET (will use localhost)');
+console.log('- DB_USER:', process.env.DB_USER || 'NOT SET (will use admin)');
+console.log('- DB_NAME:', process.env.DB_NAME || 'NOT SET (will use blog_db)');
+console.log('- DB_PASSWORD:', process.env.DB_PASSWORD ? 'SET' : 'NOT SET');
+
 // Database configuration
 const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
@@ -12,16 +20,14 @@ const dbConfig = {
     queueLimit: 0
 };
 
-// Debug database configuration (only in development)
-if (process.env.NODE_ENV !== 'production') {
-    console.log('Database Configuration:', {
-        host: dbConfig.host,
-        user: dbConfig.user,
-        database: dbConfig.database,
-        port: dbConfig.port,
-        hasPassword: !!dbConfig.password
-    });
-}
+// Debug database configuration
+console.log('Final Database Configuration:', {
+    host: dbConfig.host,
+    user: dbConfig.user,
+    database: dbConfig.database,
+    port: dbConfig.port,
+    hasPassword: !!dbConfig.password
+});
 
 let db;
 
