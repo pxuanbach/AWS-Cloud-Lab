@@ -1,10 +1,17 @@
 const express = require('express');
 const dotenv = require('dotenv');
+
+// Load environment variables FIRST, before importing other modules
+dotenv.config();
+
+// Verify environment variables are loaded
+console.log('🔧 Environment verification:');
+console.log('- NODE_ENV:', process.env.NODE_ENV || 'not set');
+console.log('- DB_HOST:', process.env.DB_HOST || 'not set');
+console.log('- PORT:', process.env.PORT || 'not set');
+
 const { initDatabase } = require('./config/database');
 const apiRouter = require('./routes/api');
-
-// Load environment variables first
-dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 80;
