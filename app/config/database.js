@@ -2,14 +2,26 @@ const mysql = require('mysql2/promise');
 
 // Database configuration
 const dbConfig = {
-    host: process.env.DB_HOST,
+    host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'admin',
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME || 'blog_db',
+    port: process.env.DB_PORT || 3306,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
 };
+
+// Debug database configuration (only in development)
+if (process.env.NODE_ENV !== 'production') {
+    console.log('Database Configuration:', {
+        host: dbConfig.host,
+        user: dbConfig.user,
+        database: dbConfig.database,
+        port: dbConfig.port,
+        hasPassword: !!dbConfig.password
+    });
+}
 
 let db;
 
