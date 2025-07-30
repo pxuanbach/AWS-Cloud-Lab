@@ -29,7 +29,9 @@ router.get('/health', (req, res) => {
     res.json({ 
         status: 'healthy', 
         timestamp: new Date().toISOString(),
-        service: 'Group3 Blog API'
+        service: 'Group6 Blog API',
+        version: '1.0.0',
+        database: 'connected'
     });
 });
 

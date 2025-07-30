@@ -9,6 +9,7 @@ console.log('🔧 Environment verification:');
 console.log('- NODE_ENV:', process.env.NODE_ENV || 'not set');
 console.log('- DB_HOST:', process.env.DB_HOST || 'not set');
 console.log('- PORT:', process.env.PORT || 'not set');
+console.log('- JWT_SECRET:', process.env.JWT_SECRET ? 'SET' : 'NOT SET (will use default)');
 
 const { initDatabase } = require('./config/database');
 const apiRouter = require('./routes/api');
@@ -54,9 +55,19 @@ async function startServer() {
     try {
         await initDatabase();
         
+        // Clean expired sessions on startup
+        const AuthService = require('./services/authService');
+        await AuthService.cleanExpiredSessions();
+        
+        // Set up periodic session cleanup (every hour)
+        setInterval(async () => {
+            await AuthService.cleanExpiredSessions();
+        }, 60 * 60 * 1000);
+        
         app.listen(port, () => {
-            console.log(`🚀 Group3 Blog API listening on port ${port}`);
+            console.log(`🚀 Group6 Blog API listening on port ${port}`);
             console.log(`💡 Environment: ${process.env.NODE_ENV || 'development'}`);
+            console.log(`🔐 Authentication: Local Database (MySQL)`);
         });
     } catch (error) {
         console.error('❌ Failed to start server:', error);
