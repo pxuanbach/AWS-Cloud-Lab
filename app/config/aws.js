@@ -37,8 +37,8 @@ if (process.env.AWS_ENDPOINT_URL) {
 
 AWS.config.update(awsConfig);
 
-// AWS Services
-const s3 = new AWS.S3();
+// AWS Services - tạo S3 instance với config đã được cấu hình
+const s3 = new AWS.S3(awsConfig);
 
 const CLOUDFRONT_DOMAIN = process.env.CLOUDFRONT_DOMAIN;
 const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME;
