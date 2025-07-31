@@ -40,10 +40,13 @@ npm start
 | `AWS_REGION` | AWS region | us-east-1 | ✅ |
 | `AWS_ACCESS_KEY_ID` | AWS access key | test (LocalStack) | ✅ |
 | `AWS_SECRET_ACCESS_KEY` | AWS secret key | test (LocalStack) | ✅ |
+| `AWS_SESSION_TOKEN` | AWS session token (temporary credentials) | - | ❌ |
 | `AWS_ENDPOINT_URL` | AWS endpoint (LocalStack) | http://localhost:4566 | ❌ |
 | `COGNITO_USER_POOL_ID` | Cognito User Pool ID | us-east-1_TestPool | ✅ |
 | `COGNITO_CLIENT_ID` | Cognito App Client ID | test-client-id | ✅ |
 | `S3_BUCKET_NAME` | S3 bucket for images | blog-images-bucket | ✅ |
+| `S3_ACCESS_KEY` | S3-specific access key | (fallback to AWS_ACCESS_KEY_ID) | ❌ |
+| `S3_SECRET_KEY` | S3-specific secret key | (fallback to AWS_SECRET_ACCESS_KEY) | ❌ |
 | `CLOUDFRONT_DOMAIN` | CloudFront distribution domain | d123456789.cloudfront.net | ✅ |
 | `PORT` | Application port | 3000 | ❌ |
 | `NODE_ENV` | Node environment | development | ❌ |

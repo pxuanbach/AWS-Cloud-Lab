@@ -4,9 +4,14 @@ const { v4: uuidv4 } = require('uuid');
 // Configure S3 for MinIO
 const s3Config = {
     region: process.env.AWS_REGION || 'us-east-1',
-    accessKeyId: process.env.S3_ACCESS_KEY || 'minioadmin',
-    secretAccessKey: process.env.S3_SECRET_KEY || 'minioadmin'
+    accessKeyId: process.env.S3_ACCESS_KEY || process.env.AWS_ACCESS_KEY_ID || 'minioadmin',
+    secretAccessKey: process.env.S3_SECRET_KEY || process.env.AWS_SECRET_ACCESS_KEY || 'minioadmin'
 };
+
+// Add session token if available (for temporary credentials)
+if (process.env.AWS_SESSION_TOKEN) {
+    s3Config.sessionToken = process.env.AWS_SESSION_TOKEN;
+}
 
 // Add MinIO endpoint if using local S3 replacement
 if (process.env.S3_ENDPOINT) {
