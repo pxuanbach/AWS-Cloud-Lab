@@ -50,6 +50,8 @@ async function getPresignedUrl(fileName, expiresIn = 3600) {
         throw new Error('S3_BUCKET_NAME not configured');
     }
     
+    console.log(`Generating presigned URL for: ${fileName} in bucket: ${bucketName}`);
+    
     const params = {
         Bucket: bucketName,
         Key: fileName,
@@ -59,6 +61,7 @@ async function getPresignedUrl(fileName, expiresIn = 3600) {
     try {
         const url = await s3.getSignedUrlPromise('getObject', params);
         
+        console.log('Generated presigned URL successfully');
         return url;
     } catch (error) {
         console.error('S3 presigned URL error:', error);
