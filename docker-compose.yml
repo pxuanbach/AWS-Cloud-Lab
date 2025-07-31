@@ -1,7 +1,6 @@
 services:
   mysql:
     image: mysql:8.0
-    container_name: group3-mysql
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: MySecurePassword123!
@@ -12,7 +11,6 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - blog-network
     healthcheck:
@@ -23,7 +21,6 @@ services:
 
   minio:
     image: minio/minio:latest
-    container_name: group3-minio
     restart: unless-stopped
     environment:
       MINIO_ROOT_USER: minioadmin
@@ -42,36 +39,10 @@ services:
       timeout: 20s
       retries: 3
 
-  # Cognito Local (thay thế AWS Cognito)
-  cognito-local:
-    image: jagregory/cognito-local:latest
-    container_name: group3-cognito
-    restart: unless-stopped
-    ports:
-      - "9229:9229"
-    volumes:
-      - ./docker/cognito-local:/app/.cognito
-    environment:
-      DEBUG: cognito-local:*
-      COGNITO_LOCAL_CONFIG_PATH: /app/.cognito/config.json
-    networks:
-      - blog-network
 
-  # Cognito User Seeder
-  cognito-seeder:
-    image: alpine:latest
-    container_name: group3-cognito-seeder
-    depends_on:
-      - cognito-local
-    volumes:
-      - ./docker/cognito-local/init-users.sh:/init-users.sh
-    command: sh -c "apk add --no-cache curl netcat-openbsd && sleep 10 && sh /init-users.sh"
-    networks:
-      - blog-network
 
   nginx:
     image: nginx:alpine
-    container_name: group3-nginx
     restart: unless-stopped
     ports:
       - "8080:80"
@@ -89,7 +60,6 @@ services:
   # Blog Application
   blog-app:
     build: ./app
-    container_name: group3-blog-app
     restart: unless-stopped
     ports:
       - "3000:80"
@@ -105,15 +75,11 @@ services:
       # AWS Mock Services
       AWS_REGION: us-east-1
       # MinIO (S3 replacement)
-      S3_BUCKET_NAME: group3-blog-static
+      S3_BUCKET_NAME: group6-blog-static
       S3_ENDPOINT: http://minio:9000
       S3_ACCESS_KEY: minioadmin
       S3_SECRET_KEY: minioadmin
       S3_FORCE_PATH_STYLE: true
-      # Cognito Local
-      COGNITO_ENDPOINT: http://cognito-local:9229
-      COGNITO_USER_POOL_ID: local_3Q1ktWNN
-      COGNITO_CLIENT_ID: 2s00fkusj37pbs3ejsg3ut855
       CDN_DOMAIN: localhost
     volumes:
       - ./app:/app
@@ -123,8 +89,6 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
-      cognito-local:
-        condition: service_started
     networks:
       - blog-network
     healthcheck:
@@ -135,7 +99,7 @@ services:
 
   minio-client:
     image: minio/mc:latest
-    container_name: group3-minio-client
+    container_name: group6-minio-client
     depends_on:
       minio:
         condition: service_healthy
@@ -143,8 +107,7 @@ services:
       /bin/sh -c "
       sleep 10;
       /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadmin;
-      /usr/bin/mc mb myminio/group3-blog-static;
-      /usr/bin/mc policy set public myminio/group3-blog-static;
+      /usr/bin/mc mb myminio/group6-blog-static;
       exit 0;
       "
     networks:

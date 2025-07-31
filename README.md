@@ -1,4 +1,4 @@
-# 📝 Group3 Simple Blog Platform - AWS Cloud Architecture
+# 📝 Group6 Simple Blog Platform - AWS Cloud Architecture
 
 ## 🎯 Tổng quan ứng dụng
 

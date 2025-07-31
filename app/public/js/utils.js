@@ -1,4 +1,4 @@
-// Utility functions for Group3 Blog
+// Utility functions for Group6 Blog
 
 class BlogAPI {
     constructor() {
@@ -9,6 +9,12 @@ class BlogAPI {
     // Helper method for API calls
     async request(endpoint, options = {}) {
         const url = `${this.baseURL}${endpoint}`;
+        
+        // Ensure token is up to date
+        if (!this.token) {
+            this.token = localStorage.getItem('authToken');
+        }
+        
         const config = {
             headers: {
                 'Content-Type': 'application/json',
@@ -49,7 +55,9 @@ class BlogAPI {
     }
 
     isAuthenticated() {
-        return !!this.token;
+        // Check both instance token and localStorage
+        const token = this.token || localStorage.getItem('authToken');
+        return !!token && token.length > 0;
     }
 
     // Blog methods
@@ -149,6 +157,27 @@ const Utils = {
         setTimeout(() => {
             window.location.href = url;
         }, delay);
+    },
+
+    // Show loading state on button
+    showLoading(button, loadingText = 'Đang xử lý...') {
+        if (button) {
+            button.disabled = true;
+            button.setAttribute('data-original-text', button.innerHTML);
+            button.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status"></span>${loadingText}`;
+        }
+    },
+
+    // Hide loading state on button
+    hideLoading(button, originalText = null) {
+        if (button) {
+            button.disabled = false;
+            const originalInnerHTML = originalText || button.getAttribute('data-original-text');
+            if (originalInnerHTML) {
+                button.innerHTML = originalInnerHTML;
+                button.removeAttribute('data-original-text');
+            }
+        }
     }
 };
 

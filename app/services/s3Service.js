@@ -80,9 +80,12 @@ async function getPresignedUrl(fileName, expiresIn = 3600) {
     try {
         const url = await s3.getSignedUrlPromise('getObject', params);
         
-        // For MinIO, replace container name with localhost for client access
+        // For MinIO, replace internal container URL with external accessible URL
         if (process.env.S3_ENDPOINT) {
-            return url.replace('minio:9000', 'localhost:9000');
+            // Replace minio:9000 with localhost:9000 for client access
+            const externalUrl = url.replace(/minio:9000/g, 'localhost:9000');
+            console.log('Generated presigned URL:', externalUrl);
+            return externalUrl;
         }
         
         return url;

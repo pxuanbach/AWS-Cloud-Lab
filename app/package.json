@@ -1,7 +1,7 @@
 {
-  "name": "group3-blog-simple",
+  "name": "Group6-blog-simple",
   "version": "1.0.0",
-  "description": "Simple blog platform with Cognito authentication for Group3",
+  "description": "Simple blog platform with Cognito authentication for Group6",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
@@ -31,7 +31,7 @@
     "nodejs",
     "express"
   ],
-  "author": "Group3",
+  "author": "Group6",
   "license": "MIT",
   "engines": {
     "node": ">=18.0.0"

@@ -136,68 +136,12 @@ router.post('/blogs', verifyToken, upload.single('image'), async (req, res) => {
             }
         }
         
-        // Get user's real name from Cognito
-        let authorName = 'User';
-        try {
-            const cognitoEndpoint = process.env.COGNITO_ENDPOINT || 'http://localhost:9229';
-            const userPoolId = process.env.COGNITO_USER_POOL_ID || 'local_pool_id';
-            const username = req.user.id; // This is the sub/username from token
-            
-            // Check if using Cognito Local
-            if (cognitoEndpoint.includes('localhost') || cognitoEndpoint.includes('cognito-local')) {
-                // For Cognito Local
-                const axios = require('axios');
-                const userProfileResponse = await axios.post(cognitoEndpoint, {
-                    UserPoolId: userPoolId,
-                    Username: username
-                }, {
-                    headers: {
-                        'X-Amz-Target': 'AWSCognitoIdentityProviderService.AdminGetUser',
-                        'Content-Type': 'application/x-amz-json-1.1'
-                    }
-                });
-
-                // Extract name from UserAttributes
-                const userAttributes = userProfileResponse.data.UserAttributes || [];
-                const nameAttribute = userAttributes.find(attr => attr.Name === 'name');
-                if (nameAttribute && nameAttribute.Value) {
-                    authorName = nameAttribute.Value;
-                } else {
-                    // Fallback to email prefix
-                    const emailAttribute = userAttributes.find(attr => attr.Name === 'email');
-                    if (emailAttribute && emailAttribute.Value) {
-                        authorName = emailAttribute.Value.split('@')[0];
-                    }
-                }
-            } else {
-                // For AWS Cognito
-                const AWS = require('aws-sdk');
-                const cognitoIdentityServiceProvider = new AWS.CognitoIdentityServiceProvider({
-                    region: process.env.AWS_REGION || 'us-east-1'
-                });
-                
-                const params = {
-                    UserPoolId: userPoolId,
-                    Username: username
-                };
-                
-                const userProfile = await cognitoIdentityServiceProvider.adminGetUser(params).promise();
-                const userAttributes = userProfile.UserAttributes || [];
-                const nameAttribute = userAttributes.find(attr => attr.Name === 'name');
-                if (nameAttribute && nameAttribute.Value) {
-                    authorName = nameAttribute.Value;
-                } else {
-                    // Fallback to email prefix
-                    const emailAttribute = userAttributes.find(attr => attr.Name === 'email');
-                    if (emailAttribute && emailAttribute.Value) {
-                        authorName = emailAttribute.Value.split('@')[0];
-                    }
-                }
-            }
-        } catch (profileError) {
-            console.error('Error fetching user name from Cognito:', profileError.message);
-            // Fallback to token data
-            authorName = req.user.name || req.user.email?.split('@')[0] || 'User';
+        // Get user's real name from database
+        let authorName = req.user.name || 'User';
+        
+        // Use user info from token (already contains database user info)
+        if (req.user.email && !authorName) {
+            authorName = req.user.email.split('@')[0];
         }
         
         const blogData = {
@@ -205,7 +149,7 @@ router.post('/blogs', verifyToken, upload.single('image'), async (req, res) => {
             content,
             imageFileName,
             authorId: req.user.id,
-            authorName: authorName  // Real name from Cognito
+            authorName: authorName
         };
         
         const result = await BlogService.createBlog(blogData);
@@ -241,6 +185,25 @@ router.delete('/blogs/:id', verifyToken, async (req, res) => {
         } else {
             res.status(500).json({ error: 'Failed to delete blog' });
         }
+    }
+});
+
+// Get presigned URL for image
+router.get('/image-url/:fileName', async (req, res) => {
+    try {
+        const fileName = req.params.fileName;
+        const expires = parseInt(req.query.expires) || 3600; // Default 1 hour
+        
+        // Always use presigned URL for both development and production
+        const S3Service = require('../services/s3Service');
+        const imageUrl = await S3Service.getPresignedUrl(fileName, expires);
+        
+        console.log('Generated presigned URL:', imageUrl);
+        res.json({ url: imageUrl });
+        
+    } catch (error) {
+        console.error('Error getting image URL:', error);
+        res.status(500).json({ error: 'Failed to get image URL' });
     }
 });
 
