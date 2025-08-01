@@ -1,6 +1,7 @@
 const winston = require('winston');
 const path = require('path');
 const fs = require('fs');
+const CloudWatchTransport = require('winston-cloudwatch');
 
 // Tạo thư mục logs nếu chưa tồn tại
 const logsDir = path.join(__dirname, '../logs');
