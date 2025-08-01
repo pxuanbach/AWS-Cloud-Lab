@@ -20,19 +20,26 @@ class CloudWatchMetrics {
         if (!this.enabled) return;
 
         try {
+            // Validate that value is a number
+            const numericValue = parseFloat(value);
+            if (isNaN(numericValue)) {
+                logger.warn(`Invalid metric value for ${metricName}: ${value}. Skipping metric.`);
+                return;
+            }
+
             const params = {
                 Namespace: this.namespace,
                 MetricData: [{
                     MetricName: metricName,
-                    Value: value,
+                    Value: numericValue,
                     Unit: unit,
                     Timestamp: new Date(),
-                    Dimensions: Object.entries(dimensions).map(([Name, Value]) => ({ Name, Value }))
+                    Dimensions: Object.entries(dimensions).map(([Name, Value]) => ({ Name, Value: String(Value) }))
                 }]
             };
 
             await cloudwatch.putMetricData(params).promise();
-            logger.debug('CloudWatch metric sent', { metricName, value, unit, dimensions });
+            logger.debug('CloudWatch metric sent', { metricName, value: numericValue, unit, dimensions });
         } catch (error) {
             logger.logError(error, { operation: 'cloudwatch_put_metric', metricName });
         }
@@ -45,18 +52,22 @@ class CloudWatchMetrics {
         if (!this.enabled) return;
 
         try {
+            // Ensure responseTime is a valid number
+            const numericResponseTime = parseFloat(responseTime) || 0;
+            const numericStatusCode = parseInt(statusCode) || 500;
+            
             const dimensions = {
                 Method: method,
                 Url: originalUrl,
-                StatusCode: statusCode.toString()
+                StatusCode: numericStatusCode.toString()
             };
 
             // Send multiple metrics in parallel
             await Promise.all([
                 this.putMetric('RequestCount', 1, 'Count', dimensions),
-                this.putMetric('ResponseTime', responseTime, 'Milliseconds', { Method: method }),
-                this.putMetric('Url', originalUrl, 'Count', { Method: method }),
-                this.putMetric(statusCode >= 400 ? 'ErrorCount' : 'SuccessCount', 1, 'Count', dimensions)
+                this.putMetric('ResponseTime', numericResponseTime, 'Milliseconds', { Method: method }),
+                this.putMetric('UrlHits', 1, 'Count', { Method: method, Url: originalUrl }),
+                this.putMetric(numericStatusCode >= 400 ? 'ErrorCount' : 'SuccessCount', 1, 'Count', dimensions)
             ]);
         } catch (error) {
             logger.logError(error, { operation: 'cloudwatch_track_request' });
@@ -122,11 +133,12 @@ class CloudWatchMetrics {
         if (!this.enabled) return;
 
         try {
+            const numericDuration = parseFloat(duration) || 0;
             const dimensions = { Operation: operation };
 
             await Promise.all([
                 this.putMetric('DatabaseOperation', 1, 'Count', dimensions),
-                this.putMetric('DatabaseResponseTime', duration, 'Milliseconds', dimensions),
+                this.putMetric('DatabaseResponseTime', numericDuration, 'Milliseconds', dimensions),
                 this.putMetric(success ? 'DatabaseSuccess' : 'DatabaseError', 1, 'Count', dimensions)
             ]);
         } catch (error) {
