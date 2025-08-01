@@ -77,7 +77,9 @@ const logger = winston.createLogger({
                 logStreamName: `application-${process.env.EC2_INSTANCE_ID || 'local'}`,
                 awsRegion: process.env.AWS_REGION,
                 jsonMessage: true,
-                retentionInDays: 30
+                retentionInDays: 30,
+                uploadRate: 2000,
+                level: 'http',
             })
         ] : [])
     ]
@@ -92,11 +94,14 @@ if (process.env.NODE_ENV !== 'production') {
 
 // Helper functions cho các loại logs khác nhau
 logger.logRequest = (req, res, responseTime) => {
+    // Ensure responseTime is a number
+    const numericResponseTime = parseFloat(responseTime) || 0;
+    
     logger.http(`${req.method} ${req.originalUrl} - ${res.statusCode}`, {
         method: req.method,
         url: req.originalUrl,
         statusCode: res.statusCode,
-        responseTime: responseTime,
+        responseTime: numericResponseTime,
         userAgent: req.get('User-Agent'),
         ip: req.ip || req.connection.remoteAddress,
         contentLength: res.get('Content-Length') || 0
@@ -105,7 +110,7 @@ logger.logRequest = (req, res, responseTime) => {
     // Send metrics to CloudWatch if available
     const cw = getCloudWatch();
     if (cw) {
-        cw.trackRequest(req.method, res.statusCode, responseTime, req.originalUrl)
+        cw.trackRequest(req.method, res.statusCode, numericResponseTime, req.originalUrl)
             .catch(error => logger.error('Error sending request metrics:', error));
     }
 };
@@ -126,24 +131,27 @@ logger.logError = (error, context = {}) => {
 };
 
 logger.logDatabase = (query, duration, error = null) => {
+    // Ensure duration is a number
+    const numericDuration = parseFloat(duration) || 0;
+    
     if (error) {
         logger.error(`Database Error: ${error.message}`, {
             query: query,
-            duration: duration,
+            duration: numericDuration,
             error: error.message,
             stack: error.stack
         });
     } else {
         logger.info('Database Query', {
             query: query,
-            duration: duration
+            duration: numericDuration
         });
     }
 
     // Send database metrics to CloudWatch if available
     const cw = getCloudWatch();
     if (cw) {
-        cw.trackDatabase('query', duration, !error)
+        cw.trackDatabase('query', numericDuration, !error)
             .catch(metricError => logger.error('Error sending database metrics:', metricError));
     }
 };
