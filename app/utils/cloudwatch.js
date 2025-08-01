@@ -39,12 +39,13 @@ class CloudWatchMetrics {
     /**
      * Track HTTP request metrics
      */
-    async trackRequest(method, statusCode, responseTime) {
+    async trackRequest(method, statusCode, responseTime, originalUrl) {
         if (!this.enabled) return;
 
         try {
             const dimensions = {
                 Method: method,
+                Url: originalUrl,
                 StatusCode: statusCode.toString()
             };
 
@@ -52,6 +53,7 @@ class CloudWatchMetrics {
             await Promise.all([
                 this.putMetric('RequestCount', 1, 'Count', dimensions),
                 this.putMetric('ResponseTime', responseTime, 'Milliseconds', { Method: method }),
+                this.putMetric('Url', originalUrl, 'Count', { Method: method }),
                 this.putMetric(statusCode >= 400 ? 'ErrorCount' : 'SuccessCount', 1, 'Count', dimensions)
             ]);
         } catch (error) {

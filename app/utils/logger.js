@@ -94,7 +94,7 @@ logger.logRequest = (req, res, responseTime) => {
     // Send metrics to CloudWatch if available
     const cw = getCloudWatch();
     if (cw) {
-        cw.trackRequest(req.method, res.statusCode, responseTime)
+        cw.trackRequest(req.method, res.statusCode, responseTime, req.originalUrl)
             .catch(error => logger.error('Error sending request metrics:', error));
     }
 };
