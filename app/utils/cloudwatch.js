@@ -8,6 +8,8 @@ class CloudWatchMetrics {
         
         if (!this.enabled) {
             logger.info('CloudWatch metrics disabled (development mode or missing AWS config)');
+        } else {
+            logger.info('CloudWatch metrics enabled', { namespace: this.namespace });
         }
     }
 

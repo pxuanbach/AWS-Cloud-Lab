@@ -68,7 +68,17 @@ const logger = winston.createLogger({
             level: 'http',
             maxsize: 5242880, // 5MB
             maxFiles: 5,
-        })
+        }),
+
+        ...(process.env.NODE_ENV === 'production' && process.env.AWS_REGION ? [
+            new CloudWatchTransport({
+                logGroupName: '/aws/ec2/group6blog',
+                logStreamName: `application-${process.env.INSTANCE_ID || 'local'}`,
+                awsRegion: process.env.AWS_REGION,
+                jsonMessage: true,
+                retentionInDays: 30
+            })
+        ] : [])
     ]
 });
 
