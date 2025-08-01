@@ -31,11 +31,20 @@ const s3 = new AWS.S3({
     signatureVersion: 'v4'
 });
 
+// Create CloudWatch instance for logging and metrics
+const cloudwatch = new AWS.CloudWatch({
+    region: awsConfig.region,
+    accessKeyId: awsConfig.accessKeyId,
+    secretAccessKey: awsConfig.secretAccessKey,
+    sessionToken: awsConfig.sessionToken
+});
+
 const CLOUDFRONT_DOMAIN = process.env.CLOUDFRONT_DOMAIN;
 const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME;
 
 module.exports = {
     s3,
+    cloudwatch,
     CLOUDFRONT_DOMAIN,
     S3_BUCKET_NAME,
 };

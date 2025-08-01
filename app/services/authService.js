@@ -60,7 +60,6 @@ class AuthService {
             };
             
         } catch (error) {
-            console.error('❌ Registration error:', error.message);
             throw error;
         }
     }
@@ -140,15 +139,11 @@ class AuthService {
     static async verifyToken(token) {
         const db = getDatabase();
         
-        try {
-            console.log('🔍 Verifying token:', token.substring(0, 20) + '...');
-            
+        try {            
             const jwtSecret = process.env.JWT_SECRET || 'group6-blog-secret-key-change-in-production';
-            console.log('🔑 Using JWT secret (first 10 chars):', jwtSecret.substring(0, 10) + '...');
             
             // Verify JWT first
             const decoded = jwt.verify(token, jwtSecret);
-            console.log('✅ JWT decoded successfully:', { userId: decoded.userId, email: decoded.email });
             
             // Try to check session in database, but don't fail if table doesn't exist or no session found
             try {
@@ -159,24 +154,15 @@ class AuthService {
                 );
                 
                 // If session table exists and session is found, continue
-                // If no session found but JWT is valid, allow it (for backward compatibility)
-                console.log(`Session check: ${sessions.length > 0 ? 'Found' : 'Not found'} for user ${decoded.userId}`);
-                
+                // If no session found but JWT is valid, allow it (for backward compatibility)                
             } catch (sessionError) {
                 // If there's an error checking sessions (e.g., table doesn't exist), 
                 // just continue with JWT validation
-                console.log('Session table check failed, using JWT only:', sessionError.message);
             }
             
             return decoded;
             
         } catch (error) {
-            console.error('❌ Token verification failed:', error.message);
-            console.error('❌ Token details:', { 
-                tokenLength: token?.length,
-                tokenStart: token?.substring(0, 20),
-                error: error.name 
-            });
             throw new Error('Token không hợp lệ hoặc đã hết hạn.');
         }
     }
@@ -193,11 +179,9 @@ class AuthService {
                 [tokenHash]
             );
             
-            console.log('✅ User logged out successfully');
             return { success: true, message: 'Đăng xuất thành công!' };
             
         } catch (error) {
-            console.error('❌ Logout error:', error.message);
             throw error;
         }
     }
@@ -212,7 +196,6 @@ class AuthService {
             );
             
             if (result.affectedRows > 0) {
-                console.log(`🧹 Cleaned ${result.affectedRows} expired sessions`);
             }
             
         } catch (error) {
