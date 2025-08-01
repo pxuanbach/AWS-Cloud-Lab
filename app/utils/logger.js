@@ -73,7 +73,7 @@ const logger = winston.createLogger({
         ...(process.env.NODE_ENV === 'production' && process.env.AWS_REGION ? [
             new CloudWatchTransport({
                 logGroupName: '/aws/ec2/group6blog',
-                logStreamName: `application-${process.env.INSTANCE_ID || 'local'}`,
+                logStreamName: `application-${process.env.EC2_INSTANCE_ID || 'local'}`,
                 awsRegion: process.env.AWS_REGION,
                 jsonMessage: true,
                 retentionInDays: 30
