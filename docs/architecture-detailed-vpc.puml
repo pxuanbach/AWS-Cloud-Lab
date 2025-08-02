@@ -1,0 +1,150 @@
+@startuml Group6_VPC_Detailed
+' AWS PlantUML Icons
+!define AWSPuml https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v20.0/dist
+!includeurl AWSPuml/AWSCommon.puml
+!include AWSPuml/NetworkingContentDelivery/all.puml
+!include AWSPuml/Compute/EC2ElasticIPAddress.puml
+
+title Group6 Platform - VPC Networking Architecture
+
+skinparam backgroundColor #FFFFFF
+skinparam packageStyle rectangle
+
+' Define custom colors for route tables
+skinparam rectangle {
+    BackgroundColor<<RouteTable>> #FFE4B5
+    BorderColor<<RouteTable>> #FF8C00
+}
+
+skinparam note {
+    BackgroundColor #F0F8FF
+    BorderColor #4169E1
+}
+
+actor "Users" as users
+cloud "Internet" as internet
+
+rectangle "AWS Cloud (us-east-1)" as aws #FF9900 {
+    
+    rectangle "VPC: group6-blog-vpc\n10.0.0.0/16" as vpc #E6F3FF {
+        
+        ' Internet Gateway
+        VPCInternetGateway(igw, "Internet Gateway", "group6-blog-igw")
+        
+        ' Route Tables
+        VPCRouter(public_rt, "Public Route Table", "group6-blog-public-rt") {
+            note right : Routes:\n• 10.0.0.0/16 → Local\n• 0.0.0.0/0 → IGW
+        }
+        
+        VPCRouter(private_rt_1, "Private Route Table 1", "group6-blog-private-rt-1") {
+            note right : Routes:\n• 10.0.0.0/16 → Local\n• 0.0.0.0/0 → NAT-GW-1
+        }
+        
+        VPCRouter(private_rt_2, "Private Route Table 2", "group6-blog-private-rt-2") {
+            note right : Routes:\n• 10.0.0.0/16 → Local\n• 0.0.0.0/0 → NAT-GW-2
+        }
+        
+        VPCRouter(db_rt, "Database Route Table", "group6-blog-db-rt") {
+            note right : Routes:\n• 10.0.0.0/16 → Local\n• No internet access
+        }
+        
+        ' Availability Zone 1a
+        rectangle "Availability Zone: us-east-1a" as az1 #E8F5E8 {
+            
+            rectangle "Public Subnet 1a\ngroup6-blog-public-1\n10.0.1.0/24\nAuto-assign Public IP: Yes" as public1 #90EE90 {
+                
+                ' NAT Gateway with EIP
+                VPCNATGateway(nat_gw_1, "NAT Gateway 1", "group6-blog-nat-1")
+                EC2ElasticIPAddress(eip1, "Elastic IP 1", "group6-blog-nat-eip-1")
+            }
+            
+            rectangle "Private Subnet 1a\ngroup6-blog-private-1\n10.0.3.0/24\nAuto-assign Public IP: No" as private1 #FFB6C1 {
+            }
+            
+            rectangle "Database Subnet 1a\ngroup6-blog-db-1\n10.0.5.0/24\nAuto-assign Public IP: No" as db1 #FFFFE0 {
+            }
+        }
+        
+        ' Availability Zone 1b
+        rectangle "Availability Zone: us-east-1b" as az2 #E8F5E8 {
+            
+            rectangle "Public Subnet 1b\ngroup6-blog-public-2\n10.0.2.0/24\nAuto-assign Public IP: Yes" as public2 #90EE90 {
+                
+                ' NAT Gateway with EIP
+                VPCNATGateway(nat_gw_2, "NAT Gateway 2", "group6-blog-nat-2")
+                EC2ElasticIPAddress(eip2, "Elastic IP 2", "group6-blog-nat-eip-2")
+            }
+            
+            rectangle "Private Subnet 1b\ngroup6-blog-private-2\n10.0.4.0/24\nAuto-assign Public IP: No" as private2 #FFB6C1 {
+            }
+            
+            rectangle "Database Subnet 1b\ngroup6-blog-db-2\n10.0.6.0/24\nAuto-assign Public IP: No" as db2 #FFFFE0 {
+            }
+        }
+        
+        ' DB Subnet Group
+        rectangle "DB Subnet Group\ngroup6-mysql-subnet-group" as db_subnet_group #FFFACD {
+            note bottom : Contains:\n• group6-blog-db-1 (AZ-1a)\n• group6-blog-db-2 (AZ-1b)
+        }
+    }
+}
+
+' Internet Connectivity
+users --> internet : "HTTPS/HTTP"
+internet --> igw : "All Traffic"
+
+' NAT Gateway connectivity
+nat_gw_1 --> igw : "via EIP-1"
+nat_gw_2 --> igw : "via EIP-2"
+
+' Elastic IP associations
+eip1 --> nat_gw_1 : "Associated"
+eip2 --> nat_gw_2 : "Associated"
+
+' Route Table Associations
+public_rt -.-> public1 : "Associated"
+public_rt -.-> public2 : "Associated"
+private_rt_1 -.-> private1 : "Associated"
+private_rt_2 -.-> private2 : "Associated"
+db_rt -.-> db1 : "Associated"
+db_rt -.-> db2 : "Associated"
+
+' Route Table to Gateway relationships
+public_rt -.-> igw : "Default Route (0.0.0.0/0)"
+private_rt_1 -.-> nat_gw_1 : "Default Route (0.0.0.0/0)"
+private_rt_2 -.-> nat_gw_2 : "Default Route (0.0.0.0/0)"
+
+' Network Security and Configuration Details
+note bottom of vpc
+<b>Network Architecture Summary</b>
+
+<b>VPC Configuration:</b>
+• VPC CIDR: 10.0.0.0/16 (65,536 IP addresses)
+• Region: us-east-1
+• Availability Zones: 2 (us-east-1a, us-east-1b)
+
+<b>Subnet Configuration:</b>
+• Public Subnets: 2 (one per AZ) - Auto-assign Public IP enabled
+• Private Subnets: 2 (one per AZ) - No public IP assignment
+• Database Subnets: 2 (one per AZ) - Isolated, no internet access
+
+<b>Route Tables:</b>
+• Public RT: Routes internet traffic (0.0.0.0/0) to Internet Gateway
+• Private RT-1: Routes internet traffic to NAT Gateway 1 (AZ-1a)
+• Private RT-2: Routes internet traffic to NAT Gateway 2 (AZ-1b)
+• Database RT: Only local VPC traffic, no internet access
+
+<b>Internet Connectivity:</b>
+• Internet Gateway: Bidirectional internet access for public subnets
+• NAT Gateways: Outbound-only internet access for private subnets
+• Elastic IPs: Static public IP addresses for NAT Gateways
+• High Availability: Each AZ has its own NAT Gateway
+
+<b>Network Isolation:</b>
+• Public Subnets: Direct internet access via IGW
+• Private Subnets: Internet access only via NAT Gateway (outbound)
+• Database Subnets: No internet access, VPC-internal only
+• Cross-AZ redundancy for all networking components
+end note
+
+@enduml
