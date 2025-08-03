@@ -140,3 +140,5 @@ vite.config.ts.timestamp-*
 
 !.env.template
 docker/cognito-local/db/*.json
+
+venv/
