@@ -1,0 +1,58 @@
+@startuml Registered_User_UseCases
+!define AWSPuml https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v20.0/dist
+!includeurl AWSPuml/AWSCommon.puml
+
+title Group6 Blog Platform - Registered User Use Cases
+
+!pragma layout smetana
+left to right direction
+skinparam packageStyle rectangle
+skinparam usecase {
+    BackgroundColor #E6F3FF
+    BorderColor #0066CC
+}
+skinparam actor {
+    BackgroundColor #232F3E
+    FontColor #FFFFFF
+}
+
+' Layout optimization
+skinparam ranksep 80
+skinparam nodesep 60
+
+' Primary actor
+actor "Người dùng đã đăng ký\n(Registered User)" as user
+
+' System boundary
+rectangle "Group6 Blog Platform - User Features" {
+    
+    package "User Dashboard" {
+        usecase "Truy cập Dashboard" as UC1
+        usecase "Đăng xuất" as UC2
+        usecase "Xem thống kê bài viết" as UC3
+    }
+    
+    package "Blog Management" {
+        usecase "Tạo bài viết mới" as UC4
+        usecase "Upload hình ảnh" as UC5
+        usecase "Xem bài viết của tôi" as UC6
+        usecase "Chỉnh sửa bài viết" as UC7
+        usecase "Xóa bài viết" as UC8
+    }
+}
+
+' User relationships
+user --> UC1
+user --> UC2
+user --> UC3
+user --> UC4
+user --> UC5
+user --> UC6
+user --> UC7
+user --> UC8
+
+
+' Include relationships
+UC4 .> UC5 : <<include>>
+
+@enduml

@@ -1,0 +1,64 @@
+@startuml Guest_User_UseCases
+!define AWSPuml https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v20.0/dist
+!includeurl AWSPuml/AWSCommon.puml
+
+title Group6 Blog Platform - Guest User Use Cases
+
+!pragma layout smetana
+left to right direction
+skinparam packageStyle rectangle
+skinparam usecase {
+    BackgroundColor #E6F3FF
+    BorderColor #0066CC
+}
+skinparam actor {
+    BackgroundColor #232F3E
+    FontColor #FFFFFF
+}
+
+' Layout optimization
+skinparam ranksep 80
+skinparam nodesep 60
+
+' Primary actor
+actor "Khách truy cập\n(Guest User)" as guest
+
+' System boundary
+rectangle "Group6 Blog Platform - Public Features" {
+    
+    package "Content Viewing" {
+        usecase "Xem trang chủ" as UC1
+        usecase "Xem danh sách blog" as UC2
+        usecase "Đọc chi tiết blog" as UC3
+        usecase "Tìm kiếm bài viết" as UC4
+        usecase "Xem thống kê blog" as UC5
+    }
+    
+    package "User Registration" {
+        usecase "Đăng ký tài khoản" as UC6
+        usecase "Xác thực email" as UC7
+        usecase "Đăng nhập" as UC8
+        usecase "Quên mật khẩu" as UC9
+    }
+}
+
+' Guest user relationships
+guest --> UC1
+guest --> UC2
+guest --> UC3
+guest --> UC4
+guest --> UC5
+guest --> UC6
+guest --> UC7
+guest --> UC8
+guest --> UC9
+
+' Include relationships
+UC6 .> UC7 : <<include>>
+UC8 .> UC7 : <<include>>
+
+' Extend relationships
+UC2 .> UC4 : <<extend>>
+UC3 .> UC5 : <<extend>>
+
+@enduml

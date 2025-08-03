@@ -3,12 +3,14 @@
 !define AWSPuml https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v20.0/dist
 !includeurl AWSPuml/AWSCommon.puml
 !include AWSPuml/Compute/EC2.puml
+!include AWSPuml/Compute/EC2AutoScaling.puml
 !include AWSPuml/Database/RDS.puml
 !include AWSPuml/Storage/SimpleStorageService.puml
 !include AWSPuml/NetworkingContentDelivery/all.puml
 
 title Group6 Platform - AWS Architecture
 
+!define DIRECTION top to bottom direction
 skinparam backgroundColor #FFFFFF
 skinparam packageStyle rectangle
 
@@ -23,33 +25,43 @@ skinparam cloud {
     FontColor #000000
 }
 
+' Layout direction
+
 actor "Users" as users
 cloud "Internet" as internet
 
 rectangle "AWS Cloud" as aws #FF9900 {
     rectangle "VPC (Group_6-VPC)\n10.0.0.0/16" as vpc #E6F3FF {
-
+        
+        ' Application Load Balancer spans across AZs
+        ElasticLoadBalancing(alb, "Application Load Balancer", "Group6-ALB -Spans both AZs-")
+        
+        ' Auto Scaling Group spans across both AZs
+        EC2AutoScaling(asg, "Auto Scaling Group", "group6-asg\nMin: 2, Max: 6, Desired: 2\nSpans both AZs")
+        
+        ' Horizontal layout for AZs
         rectangle "Availability Zone us-east-1a" as az1 #E8F5E8 {
             rectangle "Public Subnet 1a\n(10.0.1.0/24)" as public1 #90EE90 {
-                ElasticLoadBalancing(alb, "Application Load Balancer", "Group6-ALB")
                 EC2(bastion, "Bastion Host", "group6-bastion")
                 VPCNATGateway(nat_gw, "NAT Gateway", "group6-nat-gw")
             }
             rectangle "Private Subnet 1a\n(10.0.3.0/24)" as private1 #FFB6C1 {
-                EC2(ec2_1, "EC2 Instance 1", "group6-instance-1\nNode.js App")
+                EC2(ec2_1, "EC2 Instance 1", "group6-instance-1 - Node.js App")
             }
             rectangle "Database Subnet 1a\n(10.0.5.0/24)" as db1 #FFFFE0 {
                 RDS(rds_primary, "RDS MySQL Primary", "group6-mysql")
             }
         }
-
+        
+        ' Place AZ-1b to the right of AZ-1a
+        az1 -right-> az2 : ""
+        
         rectangle "Availability Zone us-east-1b" as az2 #E8F5E8 {
             rectangle "Public Subnet 1b\n(10.0.2.0/24)" as public2 #90EE90 {
-                note top : ALB spans both AZs
                 VPCNATGateway(nat_gw_2, "NAT Gateway 2", "group6-nat-gw-2")
             }
             rectangle "Private Subnet 1b\n(10.0.4.0/24)" as private2 #FFB6C1 {
-                EC2(ec2_2, "EC2 Instance 2", "group6-instance-2\nNode.js App")
+                EC2(ec2_2, "EC2 Instance 2", "group6-instance-2 - Node.js App")
             }
             rectangle "Database Subnet 1b\n(10.0.6.0/24)" as db2 #FFFFE0 {
                 RDS(rds_standby, "RDS MySQL Standby", "Multi-AZ")
@@ -57,49 +69,67 @@ rectangle "AWS Cloud" as aws #FF9900 {
         }
     }
     
-    SimpleStorageService(s3, "S3 Bucket", "group6-static-files\nFile Storage")
+    ' S3 positioned to the right
+    SimpleStorageService(s3, "S3 Bucket", "group6-static-files")
+    vpc -down-> s3 : ""
 }
 
-' Traffic Flow
-users --> internet : "HTTPS/HTTP"
-internet --> alb : "Port 80/443"
-alb --> ec2_1 : "HTTP:3000"
-alb --> ec2_2 : "HTTP:3000"
+' Auto Scaling Group relationships
+asg -.-> ec2_1 : "Manages"
+asg -.-> ec2_2 : "Manages"
+alb -.-> asg : "Target Group"
+
+' Traffic Flow - horizontal layout
+users -right-> internet : "HTTPS/HTTP"
+internet -right-> alb : "Port 80/443"
+alb -down-> ec2_1 : "HTTP:3000"
+alb -down-> ec2_2 : "HTTP:3000"
 
 ' SSH Access
-bastion -.-> ec2_1 : "SSH:22"
-bastion -.-> ec2_2 : "SSH:22"
+bastion -down-> ec2_1 : "SSH:22"
+bastion -down-> ec2_2 : "SSH:22"
 
 ' Database Connections
-ec2_1 --> rds_primary : " MySQL:3306"
-ec2_2 --> rds_primary : " MySQL:3306"
-rds_primary -.-> rds_standby : "Replication"
+ec2_1 -down-> rds_primary : "MySQL:3306"
+ec2_2 -down-> rds_standby : "MySQL:3306"
+rds_primary -right-> rds_standby : "Replication"
 
 ' File Storage
-ec2_1 --> s3 : "S3 API"
-ec2_2 --> s3 : "S3 API"
+ec2_1 -right-> s3 : "S3 API"
+ec2_2 -right-> s3 : "S3 API"
 
 ' Internet Access for Private Subnets
-ec2_1 --> nat_gw : "Internet Access"
-ec2_2 --> nat_gw_2 : "Internet Access"
-nat_gw --> internet : "Outbound Only"
-nat_gw_2 --> internet : "Outbound Only"
+ec2_1 -up-> nat_gw : "Internet Access"
+ec2_2 -up-> nat_gw_2 : "Internet Access"
+nat_gw -up-> internet : "Outbound Only"
+nat_gw_2 -up-> internet : "Outbound Only"
 
 ' Security Groups Info
 note bottom of alb
- <b>Security Groups</b>
-• ALB-SG: Port 80/443 ← Internet
-• EC2-SG: Port 3000 ← ALB-SG
-         Port 22 ← Bastion-SG
-• RDS-SG: Port 3306 ← EC2-SG
-• Bastion-SG: Port 22 ← Admin IP
+<b>Nhóm Bảo Mật</b>
+• ALB-SG: Cổng 80/443 ← Internet
+• EC2-SG: Cổng 3000 ← ALB-SG
+         Cổng 22 ← Bastion-SG
+• RDS-SG: Cổng 3306 ← EC2-SG
+• Bastion-SG: Cổng 22 ← IP Admin
+
+<b>Bộ Cân Bằng Tải Ứng Dụng</b>
+• Phân bổ trên nhiều Vùng Khả Dụng (AZ-1a, AZ-1b)
+• Tự động định tuyến lưu lượng đến các đích khỏe mạnh
+• Tính sẵn sàng cao và khả năng chịu lỗi
+
+<b>Nhóm Tự Động Mở Rộng</b>
+• Tối thiểu: 2, Tối đa: 6, Mong muốn: 2 instance
+• Phân bổ trên cả hai Vùng Khả Dụng
+• Tự động mở rộng dựa trên nhu cầu
+• Đảm bảo tính sẵn sàng cao và khả năng chịu lỗi
+• Kiểm tra sức khỏe và thay thế tự động
 
 <b>NAT Gateway</b>
-• Mỗi AZ có 1 NAT Gateway riêng (High Availability)
+• Mỗi AZ có 1 NAT Gateway riêng (Tính Sẵn Sàng Cao)
 • Cho phép EC2 trong private subnet truy cập internet
 • Chỉ cho phép kết nối outbound (không inbound)
-• Sử dụng cho việc update packages, download files
+• Sử dụng cho việc cập nhật gói, tải xuống tệp
 end note
-
 
 @enduml
