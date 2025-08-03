@@ -1,0 +1,58 @@
+@startuml Group6_Database_Design
+
+title Group6 Blog Platform - Database Design (MySQL RDS)
+
+skinparam backgroundColor #FFFFFF
+
+skinparam class {
+    BackgroundColor #FFF8DC
+    BorderColor #4169E1
+    FontColor #000000
+    HeaderBackgroundColor #4169E1
+    HeaderFontColor #FFFFFF
+}
+
+class users {
+    + id : INT AUTO_INCREMENT <<PK>>
+    + email : VARCHAR(255) UNIQUE NOT NULL
+    + name : VARCHAR(255) NOT NULL
+    + password_hash : VARCHAR(255) NOT NULL
+    + role : ENUM('user', 'admin') DEFAULT 'user'
+    + email_verified : BOOLEAN DEFAULT FALSE
+    + created_at : TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    + updated_at : TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    --
+    INDEX idx_email (email)
+}
+
+class blogs {
+    + id : INT AUTO_INCREMENT <<PK>>
+    + title : VARCHAR(255) NOT NULL
+    + content : TEXT NOT NULL
+    + image_file_name : VARCHAR(500) NULL
+    + author_id : INT NOT NULL <<FK>>
+    + author_name : VARCHAR(255) NOT NULL
+    + created_at : TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    + updated_at : TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    --
+    INDEX idx_author (author_id)
+    INDEX idx_created (created_at)
+}
+
+class user_sessions {
+    + id : INT AUTO_INCREMENT <<PK>>
+    + user_id : INT NOT NULL <<FK>>
+    + token_hash : VARCHAR(255) NOT NULL
+    + expires_at : TIMESTAMP NOT NULL
+    + created_at : TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    --
+    INDEX idx_user_id (user_id)
+    INDEX idx_token_hash (token_hash)
+    INDEX idx_expires_at (expires_at)
+}
+
+users ||--o{ blogs : author_id
+users ||--o{ user_sessions : user_id
+
+
+@enduml
